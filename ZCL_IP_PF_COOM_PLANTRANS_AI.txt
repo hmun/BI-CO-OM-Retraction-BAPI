@@ -1,0 +1,393 @@
+*----------------------------------------------------------------------*
+*       CLASS ZCL_IP_PF_COOM_PLANTRANS_AI DEFINITION
+*----------------------------------------------------------------------*
+*
+*----------------------------------------------------------------------*
+CLASS zcl_ip_pf_coom_plantrans_ai DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+
+    INTERFACES if_rsplfa_srvtype_imp_exec .
+
+    TYPES:
+      BEGIN OF ty_cubeps,
+            fiscvarnt TYPE /bi0/oifiscvarnt,
+            fiscyear  TYPE /bi0/oifiscyear,
+            fiscper3  TYPE /bi0/oifiscper3,
+            co_area   TYPE /bi0/oico_area,
+            vtype     TYPE /bi0/oivtype,
+            version   TYPE /bi0/oiversion,
+            wbs_elemt TYPE /bi0/oiwbs_elemt,
+            acttype   TYPE /bi0/oiacttype,
+            costcenter TYPE /bi0/oicostcenter,
+            costelmnt TYPE /bi0/oicostelmnt,
+            part_cctr TYPE /bi0/oipart_cctr,
+            part_actty TYPE /bi0/oipart_actty,
+            currency  TYPE /bi0/oicurrency,
+            unit      TYPE /bi0/oiunit,
+            amount    TYPE /bi0/oiquantity,
+            quantity  TYPE /bi0/oiamount,
+          END OF ty_cubeps .
+    TYPES:
+      t_ty_cubeps TYPE STANDARD TABLE OF ty_cubeps .
+    TYPES:
+      BEGIN OF t_bapiplnhdr,
+                  co_area(4) TYPE c,
+                  fisc_year(4) TYPE c,
+                  period_from(3) TYPE c,
+                  period_to(3) TYPE c,
+                  version(3) TYPE c,
+                  doc_hdr_tx(50) TYPE c,
+                  plan_currtype(1) TYPE c,
+               END OF t_bapiplnhdr .
+    TYPES:
+      BEGIN OF t_bapiacistru,
+                 object_index(6) TYPE n,
+                 value_index(6) TYPE n,
+               END OF t_bapiacistru .
+    TYPES:
+      BEGIN OF t_bapiaciobj,
+                  object_index(6) TYPE n,
+                  costcenter(10) TYPE c,
+                  acttype(6) TYPE c,
+                  co_busproc(12) TYPE c,
+                  orderid(12) TYPE c,
+                  wbs_element(24) TYPE c,
+               END OF t_bapiaciobj .
+    TYPES:
+      BEGIN OF t_bapiacival,
+                  value_index(6) TYPE n,
+                  send_cctr(10) TYPE c,
+                  send_activity(6) TYPE c,
+                  senbusproc(12) TYPE c,
+                  order_celem(10) TYPE c,
+                  quantity_fix_per01 TYPE mbgxxx,
+                  quantity_fix_per02 TYPE mbgxxx,
+                  quantity_fix_per03 TYPE mbgxxx,
+                  quantity_fix_per04 TYPE mbgxxx,
+                  quantity_fix_per05 TYPE mbgxxx,
+                  quantity_fix_per06 TYPE mbgxxx,
+                  quantity_fix_per07 TYPE mbgxxx,
+                  quantity_fix_per08 TYPE mbgxxx,
+                  quantity_fix_per09 TYPE mbgxxx,
+                  quantity_fix_per10 TYPE mbgxxx,
+                  quantity_fix_per11 TYPE mbgxxx,
+                  quantity_fix_per12 TYPE mbgxxx,
+                  quantity_fix_per13 TYPE mbgxxx,
+                  quantity_fix_per14 TYPE mbgxxx,
+                  quantity_fix_per15 TYPE mbgxxx,
+                  quantity_fix_per16 TYPE mbgxxx,
+                  quantity_var_per01 TYPE mbgxxx,
+                  quantity_var_per02 TYPE mbgxxx,
+                  quantity_var_per03 TYPE mbgxxx,
+                  quantity_var_per04 TYPE mbgxxx,
+                  quantity_var_per05 TYPE mbgxxx,
+                  quantity_var_per06 TYPE mbgxxx,
+                  quantity_var_per07 TYPE mbgxxx,
+                  quantity_var_per08 TYPE mbgxxx,
+                  quantity_var_per09 TYPE mbgxxx,
+                  quantity_var_per10 TYPE mbgxxx,
+                  quantity_var_per11 TYPE mbgxxx,
+                  quantity_var_per12 TYPE mbgxxx,
+                  quantity_var_per13 TYPE mbgxxx,
+                  quantity_var_per14 TYPE mbgxxx,
+                  quantity_var_per15 TYPE mbgxxx,
+                  quantity_var_per16 TYPE mbgxxx,
+                  send_fund(14) TYPE c,
+                  rec_fund(14) TYPE c,
+                  send_function(19) TYPE c,
+                  rec_function(19) TYPE c,
+                  send_grant(23) TYPE c,
+                  rec_grant(23) TYPE c,
+                  unit_iso(6) TYPE c,
+                  unit_of_measure(6) TYPE c,
+                  send_budget_period(13) TYPE c,
+                  rec_budget_period(13) TYPE c,
+               END OF t_bapiacival .
+
+    DATA it_cubeps TYPE t_ty_cubeps .
+    DATA it_cubeps_key TYPE t_ty_cubeps .
+    DATA wa_cubeps TYPE ty_cubeps .
+    DATA wa_cubeps_key TYPE ty_cubeps .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+ENDCLASS.
+
+
+
+CLASS ZCL_IP_PF_COOM_PLANTRANS_AI IMPLEMENTATION.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_IP_PF_COOM_PLANTRANS_AI->IF_RSPLFA_SRVTYPE_IMP_EXEC~EXECUTE
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] I_R_PARAM_SET                  TYPE REF TO IF_RSPLFA_PARAM_SET
+* | [--->] I_S_BLOCK_LINE                 TYPE        ANY
+* | [--->] I_R_MSG                        TYPE REF TO IF_RSPLFA_MSG
+* | [<-->] C_TH_DATA                      TYPE        HASHED TABLE
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+METHOD if_rsplfa_srvtype_imp_exec~execute.
+  DATA: l_destination TYPE rfcdest.
+  DATA: l_msg TYPE string,
+        l_error TYPE xfeld.
+  l_destination = zcl_ip_param=>get_param( i_param = 'DESTINATION' ).
+
+  DATA:
+     l_r_data           TYPE REF TO data,
+     l_r_param_data_sel TYPE REF TO if_rsplfa_param_data_sel,
+     l_t_sel            TYPE rsplf_t_charsel,
+     l_t_sel_2          TYPE rsplf_t_charsel,
+     l_s_sel            TYPE rsplf_s_charsel,
+     l_s_sel_2          TYPE rsplf_s_charsel,
+     l_last_iobjnm      TYPE rsiobjnm,
+     l_tabix            TYPE i.
+  FIELD-SYMBOLS: <l_s_data>  TYPE any,
+                 <l_th_data> TYPE ANY TABLE.
+* create the work areas
+  CREATE DATA l_r_data LIKE LINE OF c_th_data.
+  ASSIGN l_r_data->* TO <l_s_data>.
+  CREATE DATA l_r_data LIKE c_th_data.
+  ASSIGN l_r_data->* TO <l_th_data>.
+
+  CLEAR <l_th_data>.
+
+  FIELD-SYMBOLS:  <fiscvarnt> TYPE any,
+                  <fiscyear> TYPE any,
+                  <fiscper3> TYPE any,
+                  <co_area> TYPE any,
+                  <vtype> TYPE any,
+                  <version> TYPE any,
+                  <costcenter> TYPE any,
+                  <acttype> TYPE any,
+                  <wbs_elemt> TYPE any,
+                  <costelmnt> TYPE any,
+                  <part_cctr> TYPE any,
+                  <part_actty> TYPE any,
+                  <currency> TYPE any,
+                  <unit> TYPE any,
+                  <amount> TYPE any,
+                  <quantity> TYPE any.
+
+* collect the planing data
+  FREE: it_cubeps_key, it_cubeps.
+  LOOP AT c_th_data INTO <l_s_data>.
+    ASSIGN COMPONENT '0FISCVARNT' OF STRUCTURE <l_s_data> TO <fiscvarnt>.
+    ASSIGN COMPONENT '0FISCYEAR' OF STRUCTURE <l_s_data> TO <fiscyear>.
+    ASSIGN COMPONENT '0FISCPER3' OF STRUCTURE <l_s_data> TO <fiscper3>.
+    ASSIGN COMPONENT '0CO_AREA' OF STRUCTURE <l_s_data> TO <co_area>.
+    ASSIGN COMPONENT '0VTYPE' OF STRUCTURE <l_s_data> TO <vtype>.
+    ASSIGN COMPONENT '0VERSION' OF STRUCTURE <l_s_data> TO <version>.
+    ASSIGN COMPONENT '0ACTTYPE' OF STRUCTURE <l_s_data> TO <acttype>.
+    ASSIGN COMPONENT '0COSTCENTER' OF STRUCTURE <l_s_data> TO <costcenter>.
+    ASSIGN COMPONENT '0WBS_ELEMT' OF STRUCTURE <l_s_data> TO <wbs_elemt>.
+    ASSIGN COMPONENT '0COSTELMNT' OF STRUCTURE <l_s_data> TO <costelmnt>.
+    ASSIGN COMPONENT '0PART_CCTR' OF STRUCTURE <l_s_data> TO <part_cctr>.
+    ASSIGN COMPONENT '0PART_ACTTY' OF STRUCTURE <l_s_data> TO <part_actty>.
+    ASSIGN COMPONENT '0CURRENCY' OF STRUCTURE <l_s_data> TO <currency>.
+    ASSIGN COMPONENT '0UNIT' OF STRUCTURE <l_s_data> TO <unit>.
+    ASSIGN COMPONENT '0AMOUNT' OF STRUCTURE <l_s_data> TO <amount>.
+    ASSIGN COMPONENT '0QUANTITY' OF STRUCTURE <l_s_data> TO <quantity>.
+    CLEAR wa_cubeps.
+    wa_cubeps-fiscvarnt = <fiscvarnt>.
+    wa_cubeps-fiscyear = <fiscyear>.
+    wa_cubeps-co_area = <co_area>.
+    wa_cubeps-vtype = <vtype>.
+    wa_cubeps-version = <version>.
+    IF <acttype> IS ASSIGNED.
+      wa_cubeps-acttype = <acttype>.
+    ENDIF.
+    IF <costcenter> IS ASSIGNED.
+      wa_cubeps-costcenter = <costcenter>.
+    ENDIF.
+    IF <wbs_elemt> IS ASSIGNED.
+      wa_cubeps-wbs_elemt = <wbs_elemt>.
+    ENDIF.
+    wa_cubeps-costelmnt = <costelmnt>.
+    IF <part_cctr> IS ASSIGNED.
+      wa_cubeps-part_cctr = <part_cctr>.
+    ENDIF.
+    IF <part_actty> IS ASSIGNED.
+      wa_cubeps-part_actty = <part_actty>.
+    ENDIF.
+    COLLECT wa_cubeps INTO it_cubeps_key.
+    wa_cubeps-fiscper3 = <fiscper3>.
+    wa_cubeps-currency = <currency>.
+    wa_cubeps-unit = <unit>.
+    wa_cubeps-amount = <amount>.
+    wa_cubeps-quantity = <quantity>.
+    COLLECT wa_cubeps INTO it_cubeps.
+  ENDLOOP.
+* sort the planing data so that it conforms with the header
+  SORT it_cubeps_key BY co_area fiscyear version.
+* loop over the planing data and post it when the header key changes
+  DATA: l_old_headerinfo            TYPE t_bapiplnhdr,
+        l_headerinfo                TYPE t_bapiplnhdr,
+        lw_indexstructure           TYPE t_bapiacistru,
+        lt_indexstructure           TYPE STANDARD TABLE OF t_bapiacistru,
+        lw_coobject                 TYPE t_bapiaciobj,
+        lt_coobject                 TYPE STANDARD TABLE OF t_bapiaciobj,
+        lw_pervalue                 TYPE t_bapiacival,
+        lt_pervalue                 TYPE STANDARD TABLE OF t_bapiacival,
+        lw_return                   TYPE bapiret2,
+        lt_return                   TYPE STANDARD TABLE OF bapiret2,
+        l_count                     TYPE i.
+  DATA: l_fname(20) TYPE c.
+  FIELD-SYMBOLS: <l_val> TYPE any.
+  l_count = 0.
+  l_error = space.
+  LOOP AT it_cubeps_key INTO wa_cubeps_key.
+    CLEAR l_headerinfo.
+    l_headerinfo-co_area = wa_cubeps_key-co_area.
+    l_headerinfo-fisc_year = wa_cubeps_key-fiscyear.
+    l_headerinfo-version = wa_cubeps_key-version.
+    IF l_headerinfo NE l_old_headerinfo.
+      IF NOT l_old_headerinfo IS INITIAL.
+        l_headerinfo = l_old_headerinfo.
+        l_headerinfo-period_from = '001'.
+        l_headerinfo-period_to = '012'.
+        l_headerinfo-plan_currtype = 'O'.
+        CALL FUNCTION 'BAPI_COSTACTPLN_POSTACTINPUT' DESTINATION l_destination
+          EXPORTING
+            headerinfo     = l_headerinfo
+          TABLES
+            indexstructure = lt_indexstructure
+            coobject       = lt_coobject
+            pervalue       = lt_pervalue
+            return         = lt_return.
+        IF NOT lt_return[] IS INITIAL.
+          LOOP AT lt_return INTO lw_return.
+            IF lw_return-type = 'E'.
+              MESSAGE e001(rsplf) WITH lw_return-message INTO l_msg.
+              i_r_msg->add_msg( ).
+              l_error = 'X'.
+            ELSE.
+              MESSAGE i001(rsplf) WITH lw_return-message INTO l_msg.
+              i_r_msg->add_msg( '1' ).
+            ENDIF.
+          ENDLOOP.
+        ENDIF.
+      ENDIF.
+      l_old_headerinfo-co_area = wa_cubeps_key-co_area.
+      l_old_headerinfo-fisc_year = wa_cubeps_key-fiscyear.
+      l_old_headerinfo-version = wa_cubeps_key-version.
+      FREE: lt_indexstructure,
+            lt_coobject,
+            lt_pervalue,
+            lt_return.
+      l_count = 0.
+    ENDIF.
+*   add the records.
+    l_count = l_count + 1.
+*   object data
+    CLEAR lw_coobject.
+    lw_coobject-object_index = l_count.
+    lw_coobject-acttype = wa_cubeps_key-acttype.
+    lw_coobject-costcenter = wa_cubeps_key-costcenter.
+    lw_coobject-wbs_element = wa_cubeps_key-wbs_elemt.
+    APPEND lw_coobject TO lt_coobject.
+*   index data
+    CLEAR lw_indexstructure.
+    lw_indexstructure-object_index = l_count.
+    lw_indexstructure-value_index = l_count.
+    APPEND lw_indexstructure TO lt_indexstructure.
+*   values
+    CLEAR lw_pervalue.
+    lw_pervalue-value_index = l_count.
+    lw_pervalue-send_cctr = wa_cubeps_key-part_cctr.
+    lw_pervalue-send_activity = wa_cubeps_key-part_actty.
+*   get the the periode quantity (all variable here)
+    l_fname = 'QUANTITY_VAR_PER'.
+    LOOP AT it_cubeps INTO wa_cubeps
+      WHERE fiscvarnt = wa_cubeps_key-fiscvarnt AND
+            fiscyear = wa_cubeps_key-fiscyear AND
+            co_area = wa_cubeps_key-co_area AND
+            vtype = wa_cubeps_key-vtype AND
+            version = wa_cubeps_key-version AND
+            acttype = wa_cubeps_key-acttype AND
+            costcenter = wa_cubeps_key-costcenter AND
+            wbs_elemt = wa_cubeps_key-wbs_elemt AND
+            costelmnt = wa_cubeps_key-costelmnt AND
+            part_cctr  = wa_cubeps_key-part_cctr AND
+            part_actty = wa_cubeps_key-part_actty.
+      l_fname+16(2) = wa_cubeps-fiscper3+1(2).
+      ASSIGN COMPONENT l_fname OF STRUCTURE lw_pervalue TO <l_val>.
+      <l_val> = wa_cubeps-quantity.
+    ENDLOOP.
+    APPEND lw_pervalue TO lt_pervalue.
+  ENDLOOP.
+* post the last record
+  IF NOT lt_coobject[] IS INITIAL.
+    l_headerinfo-co_area = wa_cubeps_key-co_area.
+    l_headerinfo-fisc_year = wa_cubeps_key-fiscyear.
+    l_headerinfo-version = wa_cubeps_key-version.
+    l_headerinfo-period_from = '001'.
+    l_headerinfo-period_to = '012'.
+    l_headerinfo-plan_currtype = 'O'.
+    CALL FUNCTION 'BAPI_COSTACTPLN_POSTACTINPUT' DESTINATION l_destination
+      EXPORTING
+        headerinfo     = l_headerinfo
+      TABLES
+        indexstructure = lt_indexstructure
+        coobject       = lt_coobject
+        pervalue       = lt_pervalue
+        return         = lt_return.
+    IF NOT lt_return[] IS INITIAL.
+      LOOP AT lt_return INTO lw_return.
+        IF lw_return-type = 'E'.
+          MESSAGE e001(rsplf) WITH lw_return-message INTO l_msg.
+          i_r_msg->add_msg( ).
+          l_error = 'X'.
+        ELSE.
+          MESSAGE i001(rsplf) WITH lw_return-message INTO l_msg.
+          i_r_msg->add_msg( '1' ).
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+  ENDIF.
+  IF l_error = space.
+    CLEAR lw_return.
+    CALL FUNCTION 'BAPI_TRANSACTION_COMMIT' DESTINATION l_destination
+      EXPORTING
+        wait   = 'X'
+      IMPORTING
+        return = lw_return.
+    IF NOT lw_return IS INITIAL.
+      IF lw_return-type = 'E'.
+        MESSAGE e001(rsplf) WITH lw_return-message INTO l_msg.
+        i_r_msg->add_msg( ).
+      ELSE.
+        MESSAGE i001(rsplf) WITH lw_return-message INTO l_msg.
+        i_r_msg->add_msg( '1' ).
+      ENDIF.
+    ENDIF.
+  ENDIF.
+
+ENDMETHOD.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_IP_PF_COOM_PLANTRANS_AI->IF_RSPLFA_SRVTYPE_IMP_EXEC~FINISH_EXECUTION
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] I_R_MSG                        TYPE REF TO IF_RSPLFA_MSG
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+method IF_RSPLFA_SRVTYPE_IMP_EXEC~FINISH_EXECUTION.
+endmethod.
+
+
+* <SIGNATURE>---------------------------------------------------------------------------------------+
+* | Instance Public Method ZCL_IP_PF_COOM_PLANTRANS_AI->IF_RSPLFA_SRVTYPE_IMP_EXEC~INIT_EXECUTION
+* +-------------------------------------------------------------------------------------------------+
+* | [--->] I_R_SRVTYPE_DEF                TYPE REF TO IF_RSPLFA_SRVTYPE_DEF
+* | [--->] I_R_SRV                        TYPE REF TO IF_RSPLFA_SRV
+* | [--->] I_R_INFOPROV_DESC              TYPE REF TO IF_RSPLFA_INFOPROV_DESC
+* | [--->] I_R_MSG                        TYPE REF TO IF_RSPLFA_MSG
+* | [--->] I_T_DATA_CHARSEL               TYPE        RSPLF_T_CHARSEL
+* | [--->] I_T_DATA_NODE_SEL              TYPE        RSPLF_T_NODE(optional)
+* +--------------------------------------------------------------------------------------</SIGNATURE>
+method IF_RSPLFA_SRVTYPE_IMP_EXEC~INIT_EXECUTION.
+endmethod.
+ENDCLASS.
